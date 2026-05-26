@@ -38,6 +38,8 @@ services:
       - SQL_PASSWORD=${SERVICE_PASSWORD_POSTGRES}
     networks:
       - temporal-network
+    labels:
+      - coolify.exclude_from_status=true
     entrypoint: ["/bin/sh", "-c"]
     command:
       - |
@@ -101,6 +103,8 @@ services:
       - DEFAULT_NAMESPACE=default
     networks:
       - temporal-network
+    labels:
+      - coolify.exclude_from_status=true
     entrypoint: ["/bin/sh", "-c"]
     command:
       - |
@@ -120,6 +124,12 @@ services:
     networks:
       - temporal-network
       - coolify
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     labels:
       - traefik.enable=true
       - "traefik.http.routers.temporal-ui.rule=Host(`${SERVICE_FQDN_TEMPORALUI}`)"
