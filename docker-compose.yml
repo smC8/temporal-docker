@@ -25,13 +25,12 @@ services:
       start_period: 30s
 
   temporal-admin-tools:
-    image: temporalio/admin-tools:${TEMPORAL_ADMINTOOLS_VERSION:-1.25.2}
-    restart: on-failure:6
+    image: temporalio/admin-tools:${TEMPORAL_ADMINTOOLS_VERSION:-1.31.0}
+    restart: "on-failure:6"
     depends_on:
       postgresql:
         condition: service_healthy
     environment:
-      - DB=postgres12
       - DB_PORT=5432
       - POSTGRES_USER=${SERVICE_USER_POSTGRES:-temporal}
       - POSTGRES_PWD=${SERVICE_PASSWORD_POSTGRES}
@@ -50,17 +49,17 @@ services:
             --port "$${DB_PORT}" "$$@"
         }
         echo "Setting up temporal database..."
-        T create-database --db temporal || true
+        T --database temporal create-database || true
         T --database temporal setup-schema -v 0.0
         T --database temporal update-schema -d /etc/temporal/schema/postgresql/v12/temporal/versioned
         echo "Setting up temporal_visibility database..."
-        T create-database --db temporal_visibility || true
+        T --database temporal_visibility create-database || true
         T --database temporal_visibility setup-schema -v 0.0
         T --database temporal_visibility update-schema -d /etc/temporal/schema/postgresql/v12/visibility/versioned
         echo "Schema setup complete."
 
   temporal:
-    image: temporalio/server:${TEMPORAL_VERSION:-1.25.2}
+    image: temporalio/server:${TEMPORAL_VERSION:-1.31.0}
     depends_on:
       temporal-admin-tools:
         condition: service_completed_successfully
@@ -80,7 +79,7 @@ services:
       - type: bind
         source: ./dynamicconfig/development-sql.yaml
         target: /etc/temporal/config/dynamicconfig/development-sql.yaml
-        content: |
+        content: | # Coolify extension — not standard Docker Compose; linter warning expected
           system.forceSearchAttributesCacheRefreshOnRead:
             - value: true
               constraints: {}
@@ -92,8 +91,8 @@ services:
       retries: 60
 
   temporal-create-namespace:
-    image: temporalio/admin-tools:${TEMPORAL_ADMINTOOLS_VERSION:-1.25.2}
-    restart: on-failure:5
+    image: temporalio/admin-tools:${TEMPORAL_ADMINTOOLS_VERSION:-1.31.0}
+    restart: "on-failure:5"
     depends_on:
       temporal:
         condition: service_healthy
@@ -111,7 +110,7 @@ services:
         echo "Namespace setup complete."
 
   temporal-ui:
-    image: temporalio/ui:${TEMPORAL_UI_VERSION:-2.31.2}
+    image: temporalio/ui:${TEMPORAL_UI_VERSION:-2.49.1}
     depends_on:
       temporal:
         condition: service_healthy

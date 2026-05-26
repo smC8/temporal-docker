@@ -1,7 +1,6 @@
 #!/bin/sh
 set -e
 
-DB=${DB:-postgres12}
 DB_PORT=${DB_PORT:-5432}
 POSTGRES_USER=${POSTGRES_USER:-temporal}
 SQL_PASSWORD=${SQL_PASSWORD:-temporal}
@@ -18,12 +17,12 @@ run_tool() {
 }
 
 echo "Setting up temporal database..."
-run_tool create-database --db temporal || true
+run_tool --database temporal create-database || true
 run_tool --database temporal setup-schema -v 0.0
 run_tool --database temporal update-schema -d /etc/temporal/schema/postgresql/v12/temporal/versioned
 
 echo "Setting up temporal_visibility database..."
-run_tool create-database --db temporal_visibility || true
+run_tool --database temporal_visibility create-database || true
 run_tool --database temporal_visibility setup-schema -v 0.0
 run_tool --database temporal_visibility update-schema -d /etc/temporal/schema/postgresql/v12/visibility/versioned
 
