@@ -119,8 +119,12 @@ services:
       - TEMPORAL_CORS_ORIGINS=${SERVICE_URL_TEMPORALUI}
     networks:
       - temporal-network
-    ports:
-      - "${SERVICE_FQDN_TEMPORALUI_8080}"
+      - coolify
+    labels:
+      - traefik.enable=true
+      - "traefik.http.routers.temporal-ui.rule=Host(`${SERVICE_FQDN_TEMPORALUI}`)"
+      - traefik.http.routers.temporal-ui.entrypoints=http
+      - traefik.http.services.temporal-ui.loadbalancer.server.port=8080
 
 volumes:
   postgresql-data:
@@ -128,3 +132,5 @@ volumes:
 networks:
   temporal-network:
     driver: bridge
+  coolify:
+    external: true
