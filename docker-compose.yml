@@ -1,11 +1,11 @@
 # Coolify one-click service — Temporal Workflow Engine (PostgreSQL backend)
-# Deploy via Coolify > New Service > Docker Compose
+# Self-contained: scripts are inlined, dynamic config uses Coolify content: extension
 #
 # Magic variables resolved by Coolify at deploy time:
-#   SERVICE_PASSWORD_POSTGRES  — auto-generated postgres password
-#   SERVICE_USER_POSTGRES      — auto-generated postgres username
+#   SERVICE_PASSWORD_POSTGRES    — auto-generated postgres password
+#   SERVICE_USER_POSTGRES        — auto-generated postgres username
 #   SERVICE_FQDN_TEMPORALUI_8080 — auto-generated FQDN + proxy rule for the UI
-#   SERVICE_URL_TEMPORALUI     — full URL (https://...) for CORS config
+#   SERVICE_URL_TEMPORALUI       — full URL (https://...) for CORS config
 
 services:
   postgresql:
@@ -39,10 +39,25 @@ services:
       - SQL_PASSWORD=${SERVICE_PASSWORD_POSTGRES}
     networks:
       - temporal-network
-    volumes:
-      - ./scripts:/scripts
-    entrypoint: ["/bin/sh"]
-    command: /scripts/setup-postgres.sh
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -e
+        T() {
+          temporal-sql-tool \
+            --db "$${DB}" --plugin pgx/v5 \
+            --ep "$${POSTGRES_SEEDS}" -u "$${POSTGRES_USER}" --pw "$${SQL_PASSWORD}" \
+            --port "$${DB_PORT}" "$$@"
+        }
+        echo "Setting up temporal database..."
+        T create-database --db temporal || true
+        T --database temporal setup-schema -v 0.0
+        T --database temporal update-schema -d /etc/temporal/schema/postgresql/v12/temporal/versioned
+        echo "Setting up temporal_visibility database..."
+        T create-database --db temporal_visibility || true
+        T --database temporal_visibility setup-schema -v 0.0
+        T --database temporal_visibility update-schema -d /etc/temporal/schema/postgresql/v12/visibility/versioned
+        echo "Schema setup complete."
 
   temporal:
     image: temporalio/server:${TEMPORAL_VERSION:-1.25.2}
@@ -62,7 +77,13 @@ services:
     ports:
       - "7233:7233"
     volumes:
-      - ./dynamicconfig:/etc/temporal/config/dynamicconfig
+      - type: bind
+        source: ./dynamicconfig/development-sql.yaml
+        target: /etc/temporal/config/dynamicconfig/development-sql.yaml
+        content: |
+          system.forceSearchAttributesCacheRefreshOnRead:
+            - value: true
+              constraints: {}
     healthcheck:
       test: ["CMD", "nc", "-z", "localhost", "7233"]
       interval: 5s
@@ -81,10 +102,13 @@ services:
       - DEFAULT_NAMESPACE=default
     networks:
       - temporal-network
-    volumes:
-      - ./scripts:/scripts
-    entrypoint: ["/bin/sh"]
-    command: /scripts/create-namespace.sh
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        temporal operator namespace create \
+          --namespace "$${DEFAULT_NAMESPACE}" \
+          --address "$${TEMPORAL_ADDRESS}" || true
+        echo "Namespace setup complete."
 
   temporal-ui:
     image: temporalio/ui:${TEMPORAL_UI_VERSION:-2.31.2}
