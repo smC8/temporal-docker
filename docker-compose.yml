@@ -45,7 +45,7 @@ services:
         set -e
         T() {
           temporal-sql-tool \
-            --db "$${DB}" --plugin pgx/v5 \
+            --plugin postgres12_pgx \
             --ep "$${POSTGRES_SEEDS}" -u "$${POSTGRES_USER}" --pw "$${SQL_PASSWORD}" \
             --port "$${DB_PORT}" "$$@"
         }

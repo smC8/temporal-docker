@@ -9,8 +9,7 @@ POSTGRES_SEEDS=${POSTGRES_SEEDS:-postgresql}
 
 run_tool() {
   temporal-sql-tool \
-    --db "${DB}" \
-    --plugin pgx/v5 \
+    --plugin postgres12_pgx \
     --ep "${POSTGRES_SEEDS}" \
     -u "${POSTGRES_USER}" \
     --pw "${SQL_PASSWORD}" \
