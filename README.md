@@ -16,8 +16,16 @@ Coolify one-click service for [Temporal](https://temporal.io/) using PostgreSQL 
 
 1. In Coolify, go to **New Resource → Docker Compose**.
 2. Point it at this repository (or paste the `docker-compose.yml` contents).
-3. Coolify auto-generates the `SERVICE_*` magic variables — no manual secret entry needed.
-4. Deploy. The UI will be accessible at the auto-generated FQDN.
+3. Set the two required environment variables (Coolify generates the Postgres credentials automatically):
+
+   | Variable | Example value |
+   |----------|---------------|
+   | `SERVICE_FQDN_TEMPORALUI` | `temporal-ui.91.203.132.210.sslip.io` |
+   | `SERVICE_URL_TEMPORALUI` | `http://temporal-ui.91.203.132.210.sslip.io` |
+
+   For IP-only servers with no wildcard domain, [sslip.io](https://sslip.io) gives you a free DNS name — just substitute your server IP: `<any-label>.<ip>.sslip.io`.
+
+4. Deploy. Traefik will route `http://<SERVICE_FQDN_TEMPORALUI>` → Temporal UI.
 
 ## Connect your workers
 
@@ -32,11 +40,11 @@ Port `7233` is exposed directly on the host for gRPC worker connections.
 
 ```bash
 cp .env.example .env
-# Edit .env to set SERVICE_* variables manually, then:
+# Edit .env to set SERVICE_* variables, then:
 docker compose up
 ```
 
-UI will be at http://localhost:8080.
+UI will be at http://localhost (Traefik on port 80) once `SERVICE_FQDN_TEMPORALUI=localhost` is set.
 
 ## Upgrading versions
 
