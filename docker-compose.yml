@@ -78,11 +78,7 @@ services:
       - temporal-network
     ports:
       - "7233:7233"
-    volumes:
-      - type: bind
-        source: /data/projects/temporal/files
-        target: /etc/temporal
-        
+    volumes:        
       - type: bind
         source: ./dynamicconfig/development-sql.yaml
         target: /etc/temporal/config/dynamicconfig/development-sql.yaml
