@@ -13,8 +13,8 @@ services:
     environment:
       POSTGRES_PASSWORD: ${SERVICE_PASSWORD_POSTGRES}
       POSTGRES_USER: ${SERVICE_USER_POSTGRES:-temporal}
-    # networks:
-    #   - temporal-network
+    networks:
+      - temporal-network
     volumes:
       - postgresql-data:/var/lib/postgresql/data
     healthcheck:
@@ -37,8 +37,8 @@ services:
       - POSTGRES_PWD=${SERVICE_PASSWORD_POSTGRES}
       - POSTGRES_SEEDS=postgresql
       - SQL_PASSWORD=${SERVICE_PASSWORD_POSTGRES}
-    # networks:
-    #   - temporal-network
+    networks:
+      - temporal-network
     labels:
       - coolify.exclude_from_status=true
     entrypoint: ["/bin/sh", "-c"]
@@ -74,8 +74,8 @@ services:
       - POSTGRES_SEEDS=postgresql
       - BIND_ON_IP=0.0.0.0
       - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development-sql.yaml
-    # networks:
-    #   - temporal-network
+    networks:
+      - temporal-network
     ports:
       - "7233:7233"
     volumes:        
@@ -103,8 +103,8 @@ services:
     environment:
       - TEMPORAL_ADDRESS=temporal:7233
       - DEFAULT_NAMESPACE=default
-    # networks:
-    #   - temporal-network
+    networks:
+      - temporal-network
     labels:
       - coolify.exclude_from_status=true
     entrypoint: ["/bin/sh", "-c"]
@@ -124,26 +124,26 @@ services:
       - SERVICE_URL_TEMPORALUI_8080
       - TEMPORAL_ADDRESS=temporal:7233
       - TEMPORAL_CORS_ORIGINS=${SERVICE_URL_TEMPORALUI}
-    # networks:
-    #   - temporal-network
-    #   - coolify
+    networks:
+      - temporal-network
+      - coolify
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:8080"]
       interval: 10s
       timeout: 5s
       retries: 3
       start_period: 10s
-    # labels:
-    #   - traefik.enable=true
-    #   - "traefik.http.routers.temporal-ui.rule=Host(`${SERVICE_FQDN_TEMPORALUI}`)"
-    #   - traefik.http.routers.temporal-ui.entrypoints=http
-    #   - traefik.http.services.temporal-ui.loadbalancer.server.port=8080
+    labels:
+      - traefik.enable=true
+      - "traefik.http.routers.temporal-ui.rule=Host(`${SERVICE_FQDN_TEMPORALUI}`)"
+      - traefik.http.routers.temporal-ui.entrypoints=http
+      - traefik.http.services.temporal-ui.loadbalancer.server.port=8080
 
 volumes:
   postgresql-data:
 
-# networks:
-#   temporal-network:
-#     driver: bridge
-#   coolify:
-#     external: true
+networks:
+  temporal-network:
+    driver: bridge
+  coolify:
+    external: true
