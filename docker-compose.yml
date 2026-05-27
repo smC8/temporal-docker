@@ -27,6 +27,7 @@ services:
   temporal-admin-tools:
     image: temporalio/admin-tools:${TEMPORAL_ADMINTOOLS_VERSION:-1.31.0}
     restart: "on-failure:6"
+    exclude_from_hc: true
     depends_on:
       postgresql:
         condition: service_healthy
@@ -79,6 +80,10 @@ services:
       - "7233:7233"
     volumes:
       - type: bind
+        source: /data/projects/temporal/files
+        target: /etc/temporal
+        
+      - type: bind
         source: ./dynamicconfig/development-sql.yaml
         target: /etc/temporal/config/dynamicconfig/development-sql.yaml
         content: | # Coolify extension — not standard Docker Compose; linter warning expected
@@ -95,6 +100,7 @@ services:
   temporal-create-namespace:
     image: temporalio/admin-tools:${TEMPORAL_ADMINTOOLS_VERSION:-1.31.0}
     restart: "on-failure:5"
+    exclude_from_hc: true
     depends_on:
       temporal:
         condition: service_healthy
